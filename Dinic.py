@@ -91,3 +91,21 @@ class Graph:
                         cut.append((vert, i))
 
         return maxFlow, cut
+
+
+def read_capacity(path):
+    """
+    Составление матрицы пропускных способностей
+    :param path: путь до файла
+    :return: двумерный массив - матрица пропускных способностей
+    """
+    with open(path, 'r') as file:
+        graph_info = file.read()
+    size = int(graph_info[0])
+    graph_info = graph_info.split('\n')
+    capacity = list([[0 for i in range(size)] for i in range(size)])
+    for i in range(1, len(graph_info)):
+        edge = graph_info[i].split(' ')
+        # здесь float для общности
+        capacity[int(edge[0]) - 1][int(edge[1]) - 1] = float(edge[2])
+    return capacity
