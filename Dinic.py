@@ -26,7 +26,20 @@ class Graph:
         return self.distances[self.sink] != float('Inf')
 
     def dfs(self, v, flow):
-        pass
+        if v == self.sink or not flow:
+            return flow
+        for i in range(self.first_edge[v], len(self.cap)):
+            # если вершина находится в следующем слое
+            if self.distances[i] == self.distances[v] + 1:
+                add = self.dfs(i, min(flow, self.cap[v][i] - self.flow[v][i]))
+                if add != 0:
+                    # пускаем поток по ребру
+                    self.flow[v][i] += add
+                    self.flow[i][v] -= add
+                    return add
+            # Если по данному ребру не строится блокирующий путь - исключаем из рассмотрения
+            self.first_edge[v] += 1
+        return 0
 
     def dinic(self):
         maxFlow = 0
@@ -38,5 +51,13 @@ class Graph:
             while flow != 0:
                 maxFlow += flow
                 flow = self.dfs(self.source, float('Inf'))
+        else:
+            # нахождение разреза
+            cut = list()
+            visited = [i for i in range(len(self.distances)) if self.distances[i] != float('Inf')]
+            for vert in visited:
+                for i in range(len(self.cap)):
+                    if self.cap[vert][i] > 0 and self.distances[i] == float('Inf'):
+                        cut.append((vert, i))
 
-        return maxFlow
+        return maxFlow, cut
