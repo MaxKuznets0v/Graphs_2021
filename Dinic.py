@@ -1,5 +1,21 @@
 class Graph:
+    """
+    Класс представления сети для нахождения максимального потока
+    Поля:
+        cap - матрица пропускных способностей (двумерный массив)
+        source - номер вершины - источника (int)
+        sink - номер вершины - стока (int)
+        flow - матрица текущего потока в сети (двумерный массив)
+        distances - список расстояний от истока (массив)
+        first_edge - список первых неудаленный ребер (массив)
+    Вершины нумеруются с нуля
+    """
     def __init__(self, capacity, source, sink):
+        """
+        :param capacity: матрица пропускных способностей
+        :param source: индекс вершины - источника
+        :param sink: индекс вершины - стока
+        """
         import copy
         self.cap = copy.deepcopy(capacity)
         self.source = source
@@ -11,6 +27,10 @@ class Graph:
         self.first_edge = list()
 
     def bfs(self):
+        """
+        Поиск в ширину с выделением слоев (distances - расстояния от источника)
+        :return: bool - возвращается истина, если сток достижим из источника
+        """
         import queue
         q = queue.Queue()
         self.distances = [float('Inf') for i in range(len(self.cap))]
@@ -26,6 +46,12 @@ class Graph:
         return self.distances[self.sink] != float('Inf')
 
     def dfs(self, v, flow):
+        """
+        Поиск в глубину блокирующего пути
+        :param v: вершина из которой строится блокирующий путь
+        :param flow: минимальная пропускная способность сети в отсавшемся пути
+        :return: величина потока по локирующему пути
+        """
         if v == self.sink or not flow:
             return flow
         for i in range(self.first_edge[v], len(self.cap)):
@@ -42,6 +68,10 @@ class Graph:
         return 0
 
     def dinic(self):
+        """
+        Реализация алгоритма Диница
+        :return: величина максимального потока в сети, список ребер минимального разреза
+        """
         maxFlow = 0
         # пока сток достижим в остаточной сети
         while self.bfs():
