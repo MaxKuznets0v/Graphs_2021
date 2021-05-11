@@ -67,10 +67,10 @@ class Graph:
             self.first_edge[v] += 1
         return 0
 
-    def dinic(self, cut):
+    def dinic(self, cut=True):
         """
         Реализация алгоритма Диница
-        :param cut: булево значение True - если нужно находить разрез
+        :param cut: булево значение (True - если нужно находить разрез)
         :return: величина максимального потока в сети, список ребер минимального разреза
         """
         maxFlow = 0
