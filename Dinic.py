@@ -67,9 +67,10 @@ class Graph:
             self.first_edge[v] += 1
         return 0
 
-    def dinic(self):
+    def dinic(self, cut):
         """
         Реализация алгоритма Диница
+        :param cut: булево значение True - если нужно находить разрез
         :return: величина максимального потока в сети, список ребер минимального разреза
         """
         maxFlow = 0
@@ -83,6 +84,8 @@ class Graph:
                 flow = self.dfs(self.source, float('Inf'))
         else:
             # нахождение разреза
+            if not cut:
+                return maxFlow, None
             cut = list()
             visited = [i for i in range(len(self.distances)) if self.distances[i] != float('Inf')]
             for vert in visited:
@@ -101,10 +104,10 @@ def read_capacity(path):
     """
     with open(path, 'r') as file:
         graph_info = file.read()
-    size = int(graph_info[0])
     graph_info = graph_info.split('\n')
+    size, edges = map(int, graph_info[0].split(' '))
     capacity = list([[0 for i in range(size)] for i in range(size)])
-    for i in range(1, len(graph_info)):
+    for i in range(1, edges + 1):
         edge = graph_info[i].split(' ')
         # здесь float для общности
         capacity[int(edge[0]) - 1][int(edge[1]) - 1] = float(edge[2])
