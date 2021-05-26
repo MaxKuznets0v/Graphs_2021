@@ -42,7 +42,7 @@ class Graph:
         q.put(self.source)
         while not q.empty():
             cur = q.get()
-            for v in set(self.flow[cur].keys()):
+            for v in list(self.flow[cur].keys()):
                 try:
                     capacity = self.net[cur][v]['weight']
                 except KeyError:
@@ -64,7 +64,7 @@ class Graph:
             return flow
         for i in range(self.first_edge[v], len(self.flow[v])):
             # если вершина находится в следующем слое
-            ind = sorted(list(self.flow[v].keys()))[i]
+            ind = list(self.flow[v].keys())[i]
             if self.distances[ind] == self.distances[v] + 1:
                 try:
                     capacity = self.net[v][ind]['weight']
@@ -102,9 +102,9 @@ class Graph:
             cut = list()
             visited = [i for i in range(len(self.distances)) if self.distances[i] != float('Inf')]
             for vert in visited:
-                for i in range(len(self.net)):
-                    if self.net[vert][i]['weight'] > 0 and self.distances[i] == float('Inf'):
-                        cut.append((vert, i))
+                for v in list(self.net[vert].keys()):
+                    if self.net[vert][v]['weight'] > 0 and self.distances[v] == float('Inf'):
+                        cut.append((vert, v))
 
         return maxFlow, cut
 
