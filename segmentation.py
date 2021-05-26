@@ -180,8 +180,9 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     for pair in cut:
         image[pair[0]][pair[1]] = 0
     image = np.array(image)
-    im = Image.fromarray(image)
+    im = Image.fromarray(image.astype(np.uint8))
     im.show()
+    im.save("results/" + image_name)
     del adj_matrix
     del neighbours
     del cut
