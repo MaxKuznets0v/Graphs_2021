@@ -17,7 +17,8 @@ class Graph:
         :param sink: индекс вершины - стока
         """
         import copy
-        self.cap = copy.deepcopy(capacity)
+        # self.cap = copy.deepcopy(capacity)
+        self.cap = capacity
         self.source = source
         self.sink = sink
         self.flow = list()
