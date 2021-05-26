@@ -1,4 +1,5 @@
 import numpy as np
+import networkx as nx
 import math
 from PIL import Image
 Image.LOAD_TRUNCATED_IMAGES = True
@@ -45,7 +46,6 @@ def R_obj(p, counts_obj, counts_bkg):
     p_col = p - width * p_row - 1 # p_x
     # p_int = image[p_row, p_сol]
     p_int = image[p_col, p_row]
-
 
     if counts_obj[p_int//step_histo] + counts_bkg[p_int//step_histo] == 0:
         Pr_obj = 0
@@ -102,7 +102,8 @@ def fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_
         # зададим веса ребрам, соединяющим пиксель с соседями
         for j in neighbours[i]:
             B_ij = B(i, j)
-            adj_matrix[i][j] = B_ij
+            # adj_matrix[i][j] = B_ij
+            adj_matrix.add_edge(i, j, weight=B_ij)
             sum_B += B_ij
         max_sum_B = sum_B if sum_B > max_sum_B else max_sum_B
 
@@ -111,14 +112,20 @@ def fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_
     for i in range(1, adj_matrix_size - 1):
         # зададим веса ребрам, соединяющим с терминальными вершинами
         if i in Obj:
-            adj_matrix[i][0] = K # ребро с истоком S
-            adj_matrix[i][adj_matrix_size - 1] = 0 # ребро со стоком T
+            # adj_matrix[i][0] = K # ребро с истоком S
+            # adj_matrix[i][adj_matrix_size - 1] = 0 # ребро со стоком T
+            adj_matrix.add_edge(i, 0, weight=K) # ребро с истоком S
+            adj_matrix.add_edge(i, adj_matrix_size - 1, weight=0) # ребро со стоком T
         elif i in Bkg:
-            adj_matrix[i][0] = 0
-            adj_matrix[i][adj_matrix_size - 1] = K
+            # adj_matrix[i][0] = 0
+            # adj_matrix[i][adj_matrix_size - 1] = K
+            adj_matrix.add_edge(i, 0, weight=0)
+            adj_matrix.add_edge(i, adj_matrix_size - 1, weight=K)
         else:
-            adj_matrix[i][0] = lambda_ * R_bkg(i, counts_obj, counts_bkg)
-            adj_matrix[i][adj_matrix_size - 1] = lambda_ * R_obj(i, counts_obj, counts_bkg)
+            # adj_matrix[i][0] = lambda_ * R_bkg(i, counts_obj, counts_bkg)
+            # adj_matrix[i][adj_matrix_size - 1] = lambda_ * R_obj(i, counts_obj, counts_bkg)
+            adj_matrix.add_edge(i, 0, weight=lambda_ * R_bkg(i, counts_obj, counts_bkg))
+            adj_matrix.add_edge(i, adj_matrix_size - 1, weight=lambda_ * R_obj(i, counts_obj, counts_bkg))
 
 
 # функция вызывается из GUI и передает имя изображения, выбранные пиксели объекта и фона
@@ -169,7 +176,8 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     # print('counts_bkg', counts_bkg)
 
     adj_matrix_size = width * height + 2
-    adj_matrix = np.empty((adj_matrix_size, adj_matrix_size), dtype='float16')
+    # adj_matrix = np.empty((adj_matrix_size, adj_matrix_size), dtype='float16')
+    adj_matrix = nx.DiGraph()
     fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_bkg, Obj, Bkg)
 
     # Получаем минимальный разрез с помощью алгоритма Диница поиска максимального потока
