@@ -38,6 +38,7 @@ def fill_neighbours_list(neighbours_list):
         else:
             neighbours_list.append([i - width, i - 1, i + 1, i + width])
 
+step_histo = 16
 
 def R_obj(p, counts_obj, counts_bkg):
     p_row = p // width - 1 if p % width == 0 else p // width # p_y
@@ -45,7 +46,11 @@ def R_obj(p, counts_obj, counts_bkg):
     # p_int = image[p_row, p_сol]
     p_int = image[p_col, p_row]
 
-    Pr_obj = counts_obj[p_int]/(counts_obj[p_int] + counts_bkg[p_int])
+
+    if counts_obj[p_int//step_histo] + counts_bkg[p_int//step_histo] == 0:
+        Pr_obj = 0
+    else:
+        Pr_obj = counts_obj[p_int//step_histo]/(counts_obj[p_int//step_histo] + counts_bkg[p_int//step_histo])
     # Pr_obj = counts_obj[p_int] / obj_pixels_num
     # print(Pr_obj)
     if Pr_obj == 0.:
@@ -59,7 +64,10 @@ def R_bkg(p, counts_obj, counts_bkg):
     # p_int = image[p_row, p_сol]
     p_int = image[p_col, p_row]
 
-    Pr_bkg = counts_bkg[p_int] / (counts_obj[p_int] + counts_bkg[p_int])
+    if counts_obj[p_int//step_histo] + counts_bkg[p_int//step_histo] == 0:
+        Pr_bkg = 0
+    else:
+        Pr_bkg = counts_bkg[p_int//step_histo] / (counts_obj[p_int//step_histo] + counts_bkg[p_int//step_histo])
     # Pr_bkg = counts_bkg[p_int] / bkg_pixels_num
     # print(Pr_bkg)
     if Pr_bkg == 0.:
@@ -155,8 +163,8 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     fill_neighbours_list(neighbours)
 
     # гистограммы для объекта и для фона
-    counts_obj, bins_obj = np.histogram(Obj_int, range(257))
-    counts_bkg, bins_bkg = np.histogram(Bkg_int, range(257))
+    counts_obj, bins_obj = np.histogram(Obj_int, range(0, 257, step_histo))
+    counts_bkg, bins_bkg = np.histogram(Bkg_int, range(0, 257, step_histo))
     # print('counts_obj', counts_obj)
     # print('counts_bkg', counts_bkg)
 
@@ -174,3 +182,8 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     image = np.array(image)
     im = Image.fromarray(image)
     im.show()
+    del adj_matrix
+    del neighbours
+    del cut
+    del image
+    del Obj, Bkg, Obj_int, Bkg_int
