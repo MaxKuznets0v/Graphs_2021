@@ -5,13 +5,9 @@ from PIL import Image
 Image.LOAD_TRUNCATED_IMAGES = True
 from Dinic import Graph
 
-import matplotlib.pyplot as plt
-
 # параметры
 sigma = 50
 lambda_ = 30
-# sigma = 1
-# lambda_ = 1
 
 # ширина, высота и количество пикселей в изображениия
 width = 0
@@ -95,6 +91,8 @@ def B(p, q):
     # q_intensity = image[q_row, q_col]
     q_intensity = image[q_col, q_row]
 
+    if p_intensity <= q_intensity:
+        return 1
     return math.exp(-(p_intensity - q_intensity)**2 / 2 * sigma**2) * 1 / dist(p, q)
 
 
@@ -106,7 +104,7 @@ def fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_
         # зададим веса ребрам, соединяющим пиксель с соседями
         for j in neighbours[i]:
             B_ij = B(i, j)
-            adj_matrix.add_edge(i, j, weight=B_ij)
+            adj_matrix.add_edge(i, j, weight=B_ij, capacity=B_ij)
             sum_B += B_ij
         max_sum_B = sum_B if sum_B > max_sum_B else max_sum_B
 
@@ -115,14 +113,14 @@ def fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_
     for i in range(1, adj_matrix_size - 1):
         # зададим веса ребрам, соединяющим с терминальными вершинами
         if i in Obj:
-            adj_matrix.add_edge(0, i, weight=K) # ребро с истоком S
-            adj_matrix.add_edge(i, adj_matrix_size - 1, weight=0) # ребро со стоком T
+            adj_matrix.add_edge(0, i, weight=K, capacity=K) # ребро с истоком S
+            adj_matrix.add_edge(i, adj_matrix_size - 1, weight=0,capacity=0) # ребро со стоком T
         elif i in Bkg:
-            adj_matrix.add_edge(0, i, weight=0)
-            adj_matrix.add_edge(i, adj_matrix_size - 1, weight=K)
+            adj_matrix.add_edge(0, i, weight=0, capacity=0)
+            adj_matrix.add_edge(i, adj_matrix_size - 1, weight=K, capacity=K)
         else:
-            adj_matrix.add_edge(0, i, weight=lambda_ * R_bkg(i, counts_obj, counts_bkg))
-            adj_matrix.add_edge(i, adj_matrix_size - 1, weight=lambda_ * R_obj(i, counts_obj, counts_bkg))
+            adj_matrix.add_edge(0, i, weight=lambda_ * R_bkg(i, counts_obj, counts_bkg), capacity=lambda_ * R_bkg(i, counts_obj, counts_bkg))
+            adj_matrix.add_edge(i, adj_matrix_size - 1, weight=lambda_ * R_obj(i, counts_obj, counts_bkg), capacity=lambda_ * R_obj(i, counts_obj, counts_bkg))
 
 
 # функция вызывается из GUI и передает имя изображения, выбранные пиксели объекта и фона
@@ -139,13 +137,6 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     size = width * height
     image = im.load()
 
-    print(image)
-    for x in range(width):
-        for y in range(height):
-            print(image[x, y], end=' ')
-        print('\n')
-    print(width, height)
-
     # пользователь задает пиксели объекта (O) и фона (B)
     # значения индексов пикселей
     Obj = []
@@ -155,10 +146,10 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     Bkg_int = []
 
     for pair in obj_pixels: # pair - (x, y)
-        Obj.append(pair[0] * width + pair[1] + 1)
+        Obj.append(pair[1] * width + pair[0] + 1)
         Obj_int.append(image[pair[0], pair[1]])
     for pair in bkg_pixels:
-        Bkg.append(pair[0] * width + pair[1] + 1)
+        Bkg.append(pair[1] * width + pair[0] + 1)
         Bkg_int.append(image[pair[0], pair[1]])
 
     # считаем граф ориентированным, учитываем только 4 соседних пикселя
@@ -169,27 +160,32 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     # гистограммы для объекта и для фона
     counts_obj, bins_obj = np.histogram(Obj_int, range(0, 257, step_histo))
     counts_bkg, bins_bkg = np.histogram(Bkg_int, range(0, 257, step_histo))
-    # print('counts_obj', counts_obj)
-    # print('counts_bkg', counts_bkg)
 
     adj_matrix_size = width * height + 2
-    # adj_matrix = np.empty((adj_matrix_size, adj_matrix_size), dtype='float16')
     adj_matrix = nx.DiGraph()
     fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_bkg, Obj, Bkg)
     print('to Dinic')
     # Получаем минимальный разрез с помощью алгоритма Диница поиска максимального потока
-    _, cut = Graph(adj_matrix, 0, adj_matrix_size-1).dinic(cut=True)
-    print(cut)
-    # пиксели из минимального разреза обозначим 0, остальные - 255 и выведем ч/б изображение
-    image = [([255] * width) for i in range(height)]
-    for pair in cut:
-        image[pair[0]][pair[1]] = 0
+    _, reachable = Graph(adj_matrix, 0, adj_matrix_size-1).dinic(cut=True)
+    # _, partition = nx.algorithms.flow.minimum_cut(adj_matrix, 0, adj_matrix_size-1)
+    # reachable, non_reachable = partition
+
+    # пиксели из множества достижимых вершин обозначим 255, остальные - 0 и выведем ч/б изображение
+    image = [([0] * width) for i in range(height)]
     image = np.array(image)
+
+    for v in reachable:
+        if v != 0 and v != adj_matrix_size-1:
+            v_row = v // width - 1 if v % width == 0 else v // width
+            v_col = v - width * v_row - 1
+            print(v_col, v_row)
+            image[v_row][v_col] = 255
+
     im = Image.fromarray(image.astype(np.uint8))
-    # im.show()
+    im.show()
     im.save("results/" + image_name)
     del adj_matrix
     del neighbours
-    del cut
+    # del cut
     del image
     del Obj, Bkg, Obj_int, Bkg_int
