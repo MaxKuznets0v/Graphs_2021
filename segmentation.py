@@ -5,9 +5,13 @@ from PIL import Image
 Image.LOAD_TRUNCATED_IMAGES = True
 from Dinic import Graph
 
+import matplotlib.pyplot as plt
+
 # параметры
 sigma = 50
 lambda_ = 30
+# sigma = 1
+# lambda_ = 1
 
 # ширина, высота и количество пикселей в изображениия
 width = 0
@@ -102,7 +106,6 @@ def fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_
         # зададим веса ребрам, соединяющим пиксель с соседями
         for j in neighbours[i]:
             B_ij = B(i, j)
-            # adj_matrix[i][j] = B_ij
             adj_matrix.add_edge(i, j, weight=B_ij)
             sum_B += B_ij
         max_sum_B = sum_B if sum_B > max_sum_B else max_sum_B
@@ -112,19 +115,13 @@ def fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_
     for i in range(1, adj_matrix_size - 1):
         # зададим веса ребрам, соединяющим с терминальными вершинами
         if i in Obj:
-            # adj_matrix[i][0] = K # ребро с истоком S
-            # adj_matrix[i][adj_matrix_size - 1] = 0 # ребро со стоком T
-            adj_matrix.add_edge(i, 0, weight=K) # ребро с истоком S
+            adj_matrix.add_edge(0, i, weight=K) # ребро с истоком S
             adj_matrix.add_edge(i, adj_matrix_size - 1, weight=0) # ребро со стоком T
         elif i in Bkg:
-            # adj_matrix[i][0] = 0
-            # adj_matrix[i][adj_matrix_size - 1] = K
-            adj_matrix.add_edge(i, 0, weight=0)
+            adj_matrix.add_edge(0, i, weight=0)
             adj_matrix.add_edge(i, adj_matrix_size - 1, weight=K)
         else:
-            # adj_matrix[i][0] = lambda_ * R_bkg(i, counts_obj, counts_bkg)
-            # adj_matrix[i][adj_matrix_size - 1] = lambda_ * R_obj(i, counts_obj, counts_bkg)
-            adj_matrix.add_edge(i, 0, weight=lambda_ * R_bkg(i, counts_obj, counts_bkg))
+            adj_matrix.add_edge(0, i, weight=lambda_ * R_bkg(i, counts_obj, counts_bkg))
             adj_matrix.add_edge(i, adj_matrix_size - 1, weight=lambda_ * R_obj(i, counts_obj, counts_bkg))
 
 
@@ -182,7 +179,7 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
 
     # Получаем минимальный разрез с помощью алгоритма Диница поиска максимального потока
     _, cut = Graph(adj_matrix, 0, adj_matrix_size-1).dinic(cut=True)
-
+    print(cut)
     # пиксели из минимального разреза обозначим 0, остальные - 255 и выведем ч/б изображение
     image = [([255] * width) for i in range(height)]
     for pair in cut:
