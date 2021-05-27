@@ -42,6 +42,7 @@ class Graph:
         q.put(self.source)
         while not q.empty():
             cur = q.get()
+            print("BFS vertex:", cur)
             for v in list(self.flow[cur].keys()):
                 try:
                     capacity = self.net[cur][v]['weight']
@@ -95,6 +96,7 @@ class Graph:
             while flow != 0:
                 maxFlow += flow
                 flow = self.dfs(self.source, float('Inf'))
+                print(self.first_edge[self.source])
         else:
             # нахождение разреза
             if not cut:

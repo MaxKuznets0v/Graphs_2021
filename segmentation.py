@@ -155,10 +155,10 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     Bkg_int = []
 
     for pair in obj_pixels: # pair - (x, y)
-        Obj.append(pair[0] * width + pair[1] + 1)
+        Obj.append(pair[1] * width + pair[0] + 1)
         Obj_int.append(image[pair[0], pair[1]])
     for pair in bkg_pixels:
-        Bkg.append(pair[0] * width + pair[1] + 1)
+        Bkg.append(pair[1] * width + pair[0] + 1)
         Bkg_int.append(image[pair[0], pair[1]])
 
     # считаем граф ориентированным, учитываем только 4 соседних пикселя
@@ -181,9 +181,10 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     _, cut = Graph(adj_matrix, 0, adj_matrix_size-1).dinic(cut=True)
     print(cut)
     # пиксели из минимального разреза обозначим 0, остальные - 255 и выведем ч/б изображение
-    image = [([255] * width) for i in range(height)]
+    image = [([0] * width) for i in range(height)]
     for pair in cut:
-        image[pair[0]][pair[1]] = 0
+        if pair[1] == adj_matrix_size-1:
+            image[(pair[0] - 1) // width][(pair[0] - 1) % width] = 255
     image = np.array(image)
     im = Image.fromarray(image.astype(np.uint8))
     # im.show()
