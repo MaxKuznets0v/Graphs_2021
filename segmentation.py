@@ -58,7 +58,7 @@ def R_obj(p, counts_obj, counts_bkg):
     # Pr_obj = counts_obj[p_int] / obj_pixels_num
     # print(Pr_obj)
     if Pr_obj == 0.:
-        return float('Inf')
+        return 10e+6
     return -math.log(Pr_obj)
 
 
@@ -75,7 +75,7 @@ def R_bkg(p, counts_obj, counts_bkg):
     # Pr_bkg = counts_bkg[p_int] / bkg_pixels_num
     # print(Pr_bkg)
     if Pr_bkg == 0.:
-        return float('Inf')
+        return 10e+6
     return -math.log(Pr_bkg)
 
 
@@ -176,7 +176,7 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     # adj_matrix = np.empty((adj_matrix_size, adj_matrix_size), dtype='float16')
     adj_matrix = nx.DiGraph()
     fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_bkg, Obj, Bkg)
-
+    print('to Dinic')
     # Получаем минимальный разрез с помощью алгоритма Диница поиска максимального потока
     _, cut = Graph(adj_matrix, 0, adj_matrix_size-1).dinic(cut=True)
     print(cut)
@@ -186,7 +186,7 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
         image[pair[0]][pair[1]] = 0
     image = np.array(image)
     im = Image.fromarray(image.astype(np.uint8))
-    im.show()
+    # im.show()
     im.save("results/" + image_name)
     del adj_matrix
     del neighbours
