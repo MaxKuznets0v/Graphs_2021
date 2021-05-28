@@ -157,7 +157,7 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     adj_matrix = nx.DiGraph()
     fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_bkg, Obj, Bkg)
     # Получаем минимальный разрез с помощью алгоритма Диница поиска максимального потока
-    _, reachable = Graph(adj_matrix, 0, adj_matrix_size-1).dinic(cut=True)
+    _, obj_pixels = Graph(adj_matrix, 0, adj_matrix_size-1).dinic(cut=True)
     # _, partition = nx.algorithms.flow.minimum_cut(adj_matrix, 0, adj_matrix_size-1)
     # reachable, non_reachable = partition
 
@@ -165,12 +165,10 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     image = [([0] * width) for i in range(height)]
     image = np.array(image)
 
-    for v in reachable:
-        if v != 0 and v != adj_matrix_size-1:
-            v_row = v // width - 1 if v % width == 0 else v // width
-            v_col = v - width * v_row - 1
-            print(v_col, v_row)
-            image[v_row][v_col] = 255
+    for v in obj_pixels:
+        v_row = v // width - 1 if v % width == 0 else v // width
+        v_col = v - width * v_row - 1
+        image[v_row][v_col] = 255
 
     im = Image.fromarray(image.astype(np.uint8))
     im.show()
