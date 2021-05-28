@@ -146,18 +146,23 @@ def add_seeds(image_name, obj_pixels, bkg_pixels):
         edges.append((vert, graph.sink, K + lambda_ * R_bkg(vert, counts_obj, counts_bkg)))
     obj = graph.update(edges)
 
+    img_result = [([0] * width) for i in range(height)]
+    img_result = np.array(img_result)
+
     for v in obj:
         v_row = v // width - 1 if v % width == 0 else v // width
         v_col = v - width * v_row - 1
-        image[v_row][v_col] = 255
+        img_result[v_row][v_col] = 255
 
-    im = Image.fromarray(image.astype(np.uint8))
+    im = Image.fromarray(img_result.astype(np.uint8))
     im.show()
     im.save("results/" + image_name)
     del Obj_int
     del Bkg_int
     del edges
     del obj
+    del img_result
+    return "results/" + image_name
 
 
 # функция вызывается из GUI и передает имя изображения, выбранные пиксели объекта и фона
@@ -174,7 +179,7 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     size = width * height
     image = im.load()
 
-    # пользователь задает пиксели объекта (O) и фона (B)
+    # пользователь задает пиксели объекта и фона
     # значения индексов пикселей
     Obj = []
     Bkg = []
@@ -198,29 +203,32 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     counts_obj, bins_obj = np.histogram(Obj_int, range(0, 257, step_histo))
     counts_bkg, bins_bkg = np.histogram(Bkg_int, range(0, 257, step_histo))
 
+    # матрица смежности
     adj_matrix_size = width * height + 2
     adj_matrix = nx.DiGraph()
     fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_bkg, Obj, Bkg)
-    # Получаем минимальный разрез с помощью алгоритма Диница поиска максимального потока
+
+    # получаем минимальный разрез с помощью алгоритма Диница поиска максимального потока
     global graph
     graph = Graph(adj_matrix, 0, adj_matrix_size-1)
     _, obj = graph.dinic(cut=True)
     # _, partition = nx.algorithms.flow.minimum_cut(adj_matrix, 0, adj_matrix_size-1)
-    # reachable, non_reachable = partition
+    # obj, non_reachable = partition
 
-    # пиксели из множества достижимых вершин обозначим 255, остальные - 0 и выведем ч/б изображение
-    image = [([0] * width) for i in range(height)]
-    image = np.array(image)
+    # пиксели из множества достижимых вершин обозначим 255 (белый), остальные - 0 (черный) и получим ч/б изображение
+    img_result = [([0] * width) for i in range(height)]
+    img_result = np.array(img_result)
 
     for v in obj:
         v_row = v // width - 1 if v % width == 0 else v // width
         v_col = v - width * v_row - 1
-        image[v_row][v_col] = 255
+        img_result[v_row][v_col] = 255
 
-    im = Image.fromarray(image.astype(np.uint8))
+    im = Image.fromarray(img_result.astype(np.uint8))
     im.show()
     im.save("results/" + image_name)
     del adj_matrix
     del neighbours
-    del image
+    del img_result
     del Obj, Bkg, Obj_int, Bkg_int
+    return "results/" + image_name
