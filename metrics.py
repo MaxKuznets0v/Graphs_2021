@@ -24,11 +24,17 @@ def metrics(path1, path2):
     for i in range(width1):
         for j in range(height2):
             if type(image1[i, j]) is not int:
-                int1 = image1[i, j][0] + image1[i, j][1] + image1[i, j][2]
+                if image1[i, j][0] < 100:
+                    int1 = 0
+                else:
+                    int1 = 255
             else:
                 int1 = image1[i, j]
             if type(image2[i, j]) is not int:
-                int2 = image2[i, j][0] + image2[i, j][1] + image2[i, j][2]
+                if image2[i, j][0] < 100:
+                    int2 = 0
+                else:
+                    int2 = 255
             else:
                 int2 = image2[i, j]
 
@@ -45,5 +51,5 @@ def metrics(path1, path2):
     print(common_pixels, obj_1, obj_2, common_pixels_obj)
     
 
-metrics(r'C:\Users\Administrator\Documents\GitHub\Graphs_2021\results\banana1-gr-320.jpg', 
-                  r'C:\Users\Administrator\Documents\GitHub\Graphs_2021\image-segments-320\banana1-320.jpg')
+metrics(r'results\teddy-gr-320.jpg',
+                  r'image-segments-320\teddy-320.jpg')
