@@ -117,6 +117,18 @@ class Graph:
 
         return maxFlow, obj_vert
 
+    def update(self, edges):
+        """
+        Обновление весов при добавлении сидов
+        :param edges: список ребер (u, v, C) C - добавочный вес
+        :return: список вершин, соответсвующих объекту
+        """
+        for edge in edges:
+            self.flow[edge[0]][edge[1]]['weight'] += edge[2]
+            self.net[edge[0]][edge[1]]['weight'] += edge[2]
+        _, obj = self.dinic()
+        return obj
+
 
 def read_capacity(path):
     """
