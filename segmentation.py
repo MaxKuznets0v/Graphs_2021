@@ -7,8 +7,8 @@ Image.LOAD_TRUNCATED_IMAGES = True
 
 
 # параметры
-sigma = 50
-lambda_ = 30
+sigma = 60
+lambda_ = 2
 
 # ширина, высота и количество пикселей в изображениия
 width = 0
@@ -211,9 +211,9 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     # получаем минимальный разрез с помощью алгоритма Диница поиска максимального потока
     global graph
     graph = Graph(adj_matrix, 0, adj_matrix_size-1)
-    _, obj = graph.dinic(cut=True)
-    # _, partition = nx.algorithms.flow.minimum_cut(adj_matrix, 0, adj_matrix_size-1)
-    # obj, non_reachable = partition
+    #_, obj = graph.dinic(cut=True)
+    _, partition = nx.algorithms.flow.minimum_cut(adj_matrix, 0, adj_matrix_size-1)
+    obj, non_reachable = partition
 
     # пиксели из множества достижимых вершин обозначим 255 (белый), остальные - 0 (черный) и получим ч/б изображение
     img_result = [([0] * width) for i in range(height)]

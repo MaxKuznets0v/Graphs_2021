@@ -51,5 +51,5 @@ def metrics(path1, path2):
     print(common_pixels, obj_1, obj_2, common_pixels_obj)
     
 
-metrics(r'results\teddy-gr-320.jpg',
-                  r'image-segments-320\teddy-320.jpg')
+metrics(r'results\scissors-gr-320.jpg',
+                  r'image-segments-320\scissors-320.jpg')
