@@ -44,15 +44,12 @@ step_histo = 16
 def R_obj(p, counts_obj, counts_bkg):
     p_row = p // width - 1 if p % width == 0 else p // width # p_y
     p_col = p - width * p_row - 1 # p_x
-    # p_int = image[p_row, p_сol]
     p_int = image[p_col, p_row]
 
     if counts_obj[p_int//step_histo] + counts_bkg[p_int//step_histo] == 0:
         Pr_obj = 0
     else:
         Pr_obj = counts_obj[p_int//step_histo]/(counts_obj[p_int//step_histo] + counts_bkg[p_int//step_histo])
-    # Pr_obj = counts_obj[p_int] / obj_pixels_num
-    # print(Pr_obj)
     if Pr_obj == 0.:
         return 10e+6
     return -math.log(Pr_obj)
@@ -61,15 +58,12 @@ def R_obj(p, counts_obj, counts_bkg):
 def R_bkg(p, counts_obj, counts_bkg):
     p_row = p // width - 1 if p % width == 0 else p // width  # p_y
     p_col = p - width * p_row - 1 # p_x
-    # p_int = image[p_row, p_сol]
     p_int = image[p_col, p_row]
 
     if counts_obj[p_int//step_histo] + counts_bkg[p_int//step_histo] == 0:
         Pr_bkg = 0
     else:
         Pr_bkg = counts_bkg[p_int//step_histo] / (counts_obj[p_int//step_histo] + counts_bkg[p_int//step_histo])
-    # Pr_bkg = counts_bkg[p_int] / bkg_pixels_num
-    # print(Pr_bkg)
     if Pr_bkg == 0.:
         return 10e+6
     return -math.log(Pr_bkg)
@@ -83,12 +77,10 @@ def dist(p, q):
 def B(p, q):
     p_row = p // width - 1 if p % width == 0 else p // width  # p_y
     p_col = p - width * p_row - 1 # p_x
-    # p_intensity = image[p_row, p_col]
     p_intensity = image[p_col, p_row]
 
     q_row = q // width - 1 if q % width == 0 else q // width  # q_y
     q_col = q - width * q_row - 1 # q_x
-    # q_intensity = image[q_row, q_col]
     q_intensity = image[q_col, q_row]
 
     if p_intensity <= q_intensity:
@@ -164,7 +156,6 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     adj_matrix_size = width * height + 2
     adj_matrix = nx.DiGraph()
     fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_bkg, Obj, Bkg)
-    print('to Dinic')
     # Получаем минимальный разрез с помощью алгоритма Диница поиска максимального потока
     _, reachable = Graph(adj_matrix, 0, adj_matrix_size-1).dinic(cut=True)
     # _, partition = nx.algorithms.flow.minimum_cut(adj_matrix, 0, adj_matrix_size-1)
@@ -186,6 +177,5 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     im.save("results/" + image_name)
     del adj_matrix
     del neighbours
-    # del cut
     del image
     del Obj, Bkg, Obj_int, Bkg_int
