@@ -1,9 +1,10 @@
 import numpy as np
 import networkx as nx
 import math
+from Dinic import Graph
 from PIL import Image
 Image.LOAD_TRUNCATED_IMAGES = True
-from Dinic import Graph
+
 
 # параметры
 sigma = 50
@@ -13,6 +14,8 @@ lambda_ = 30
 width = 0
 height = 0
 size = 0
+graph = 0
+K = 0
 
 
 def fill_neighbours_list(neighbours_list):
@@ -40,6 +43,7 @@ def fill_neighbours_list(neighbours_list):
             neighbours_list.append([i - width, i - 1, i + 1, i + width])
 
 step_histo = 16
+
 
 def R_obj(p, counts_obj, counts_bkg):
     p_row = p // width - 1 if p % width == 0 else p // width # p_y
@@ -90,6 +94,7 @@ def B(p, q):
 
 def fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_bkg, Obj, Bkg):
     # матрица смежности, S - 1-ая вершина, T - последняя вершина
+    global K
     max_sum_B = 0
     for i in range(1, adj_matrix_size-1): # начинаем с 1, то есть с 1-ой вершины в изначальном графе
         sum_B = 0
@@ -113,6 +118,46 @@ def fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_
         else:
             adj_matrix.add_edge(0, i, weight=lambda_ * R_bkg(i, counts_obj, counts_bkg), capacity=lambda_ * R_bkg(i, counts_obj, counts_bkg))
             adj_matrix.add_edge(i, adj_matrix_size - 1, weight=lambda_ * R_obj(i, counts_obj, counts_bkg), capacity=lambda_ * R_obj(i, counts_obj, counts_bkg))
+
+
+# функция вызывается из GUI и передает выбранные пиксели объекта и фона
+def add_seeds(image_name, obj_pixels, bkg_pixels):
+    global graph
+    global width
+
+    Obj_int = list()
+    Bkg_int = list()
+
+    for pair in obj_pixels:  # pair - (x, y)
+        Obj_int.append(image[pair[0], pair[1]])
+    for pair in bkg_pixels:
+        Bkg_int.append(image[pair[0], pair[1]])
+    counts_obj, bins_obj = np.histogram(Obj_int, range(0, 257, step_histo))
+    counts_bkg, bins_bkg = np.histogram(Bkg_int, range(0, 257, step_histo))
+
+    edges = list()
+    for pair in obj_pixels:
+        vert = pair[1] * width + pair[0] + 1
+        edges.append((graph.source, vert, K + lambda_ * R_obj(vert, counts_obj, counts_bkg)))
+        edges.append((vert, graph.sink, lambda_ * R_bkg(vert, counts_obj, counts_bkg)))
+    for pair in bkg_pixels:
+        vert = pair[1] * width + pair[0] + 1
+        edges.append((graph.source, vert, lambda_ * R_obj(vert, counts_obj, counts_bkg)))
+        edges.append((vert, graph.sink, K + lambda_ * R_bkg(vert, counts_obj, counts_bkg)))
+    obj = graph.update(edges)
+
+    for v in obj:
+        v_row = v // width - 1 if v % width == 0 else v // width
+        v_col = v - width * v_row - 1
+        image[v_row][v_col] = 255
+
+    im = Image.fromarray(image.astype(np.uint8))
+    im.show()
+    im.save("results/" + image_name)
+    del Obj_int
+    del Bkg_int
+    del edges
+    del obj
 
 
 # функция вызывается из GUI и передает имя изображения, выбранные пиксели объекта и фона
@@ -157,7 +202,9 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     adj_matrix = nx.DiGraph()
     fill_adj_matrix(adj_matrix, adj_matrix_size, neighbours, counts_obj, counts_bkg, Obj, Bkg)
     # Получаем минимальный разрез с помощью алгоритма Диница поиска максимального потока
-    _, obj_pixels = Graph(adj_matrix, 0, adj_matrix_size-1).dinic(cut=True)
+    global graph
+    graph = Graph(adj_matrix, 0, adj_matrix_size-1)
+    _, obj = graph.dinic(cut=True)
     # _, partition = nx.algorithms.flow.minimum_cut(adj_matrix, 0, adj_matrix_size-1)
     # reachable, non_reachable = partition
 
@@ -165,7 +212,7 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     image = [([0] * width) for i in range(height)]
     image = np.array(image)
 
-    for v in obj_pixels:
+    for v in obj:
         v_row = v // width - 1 if v % width == 0 else v // width
         v_col = v - width * v_row - 1
         image[v_row][v_col] = 255
