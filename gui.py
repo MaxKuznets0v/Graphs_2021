@@ -13,78 +13,88 @@ obj_pixels = []
 bkg_pixels = []
 width_image = 0
 height_image = 0
+# шаг, определяющий количество учитываемых соседей пикселя, на который кликнули
+step = 3
 
 def pick_obj():
-    canvas.bind('<Button-1>', click_obj)
+    canvas.bind('<B1-Motion>', highlight_obj)
 
-def click_obj(event):
-    global obj_pixels_str
+def highlight_obj(event):
     x = event.x
     y = event.y
-    if x <= width_image and y <= height_image:
-        obj_pixels_str = obj_pixels_str + '(' + str(x) + ', ' + str(y) + '), '
-        lbl_obj_pixels.configure(text=obj_pixels_str)
-        obj_pixels.append([x-1, y-1])
+    px_and_neighbours = []
+    for i in range(-step, step+1):
+        if x - 1 + i >= 0:
+            for j in range(-step, step+1):
+                if y - 1 + j >= 0:
+                    px_and_neighbours.append([x - 1 + i, y - 1 + j])
+
+    if x + step <= width_image and y + step <= height_image:
+        for pair in px_and_neighbours:
+            obj_pixels.append(pair)
+        canvas.create_rectangle(x - 1 - step, y - 1 - step, x - 1 + step, y - 1 + step, fill='red', outline='red', width=0)
+
 
 def pick_bkg():
-    canvas.bind('<Button-1>', click_bkg)
+    canvas.bind('<B1-Motion>', highlight_bkg)
 
-def click_bkg(event):
-    global bkg_pixels_str
+def highlight_bkg(event):
     x = event.x
     y = event.y
-    if x <= width_image and y <= height_image:
-        bkg_pixels_str = bkg_pixels_str + '(' + str(x) + ', ' + str(y) + '), '
-        lbl_bkg_pixels.configure(text=bkg_pixels_str)
-        bkg_pixels.append([x-1, y-1])
+    px_and_neighbours = []
+    for i in range(-step, step+1):
+        if x - 1 + i >= 0:
+            for j in range(-step, step+1):
+                if y - 1 + j >= 0:
+                    px_and_neighbours.append([x - 1 + i, y - 1 + j])
+
+    if x + step <= width_image and y + step <= height_image:
+        for pair in px_and_neighbours:
+            bkg_pixels.append(pair)
+        canvas.create_rectangle(x - 1 - step, y - 1 - step, x - 1 + step, y - 1 + step, fill='blue', outline='blue', width=0)
 
 def choose_image():
     # global image
     global width_image, height_image
     lbl_image_name.configure(text=combo_list.get())
-    # lbl.grid(row=3, column=1)
     lbl_image_name.pack()
     pilImage = Image.open("images-320\\" + combo_list.get())
     width_image = pilImage.size[0]
     height_image = pilImage.size[1]
-    print(width_image, height_image)
+    canvas.configure(height=height_image, width=width_image)
     image = ImageTk.PhotoImage(pilImage)
     image_c = canvas.create_image(0, 0, anchor='nw', image=image)
-    # # canvas.grid(row=3, column=3)
     canvas.pack()
-    # btn_obj = Button(root, text="Выделить объект")
-    # btn_bkg = Button(root, text="Выделить фон")
     btn_obj.pack()
     btn_bkg.pack()
-    lbl_obj_pixels.pack()
-    lbl_bkg_pixels.pack()
     btn_segmentation.pack()
-    # canvas.bind('<Button-1>', click)
     panel.configure(image=image)
     panel.image = image
     # panel.pack()
 
 
 def start_segmentation():
-    segmentation(combo_list.get(), obj_pixels, bkg_pixels)
+    unique_obj_pixels = []
+    unique_bkg_pixels = []
+    for pair in obj_pixels:
+        if pair not in unique_obj_pixels:
+            unique_obj_pixels.append(pair)
+    for pair in bkg_pixels:
+        if pair not in unique_bkg_pixels:
+            unique_bkg_pixels.append(pair)
+    segmentation(combo_list.get(), unique_obj_pixels, unique_bkg_pixels)
 
 
 root = Tk()
-root.geometry('800x800')
+root.geometry('500x650')
 root.title('Сегментация изображения')
 
-# frame = Frame(root)
-# frame.grid()
-
 lbl_choose_image = Label(root, text='Выберите изображение:')
-# lbl_choose_image.grid(row=1, column=1)
 lbl_choose_image.pack()
 combo_list = Combobox(root)
 combo_list['values'] = list_of_images
-# combo_list.grid(row=2, column=1)
 combo_list.pack()
 btn_choose_image = Button(root, text='Выбрать', command=choose_image)
-# btn_choose_image.grid(row=2, column=2)
 btn_choose_image.pack()
 
 lbl_image_name = Label(root, text='')
@@ -94,8 +104,6 @@ obj_pixels_str = "Пиксели объекта: "
 bkg_pixels_str = "Пиксели фона: "
 btn_obj = Button(root, text="Выделить объект", command=pick_obj)
 btn_bkg = Button(root, text="Выделить фон", command=pick_bkg)
-lbl_obj_pixels = Label(root, text="Пиксели объекта: ")
-lbl_bkg_pixels = Label(root, text="Пиксели фона: ")
 btn_segmentation = Button(root, text="Начать сегментацию", command=start_segmentation)
 
 root.mainloop()
