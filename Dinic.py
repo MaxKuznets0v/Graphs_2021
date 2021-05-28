@@ -68,10 +68,11 @@ class Graph:
         print("in dfs")
         if v == self.sink or not flow:
             return flow
+        neighbours = list(self.flow[v].keys())
         for i in range(self.first_edge[v], len(self.flow[v])):
             print('dfs', i)
             # если вершина находится в следующем слое
-            ind = list(self.flow[v].keys())[i]
+            ind = neighbours[i]
             if self.distances[ind] == self.distances[v] + 1:
                 try:
                     capacity = self.net[v][ind]['weight']
@@ -107,9 +108,14 @@ class Graph:
             # нахождение разреза
             if not cut:
                 return maxFlow, None
+            obj_vert = list()
             reachable = [i for i in range(len(self.distances)) if self.distances[i] != float('Inf')]
+            for vert in reachable:
+                for v in list(self.net[vert].keys()):
+                    if v == self.sink and self.net[vert][v]['weight'] > 0 and self.distances[v] == float('Inf'):
+                        obj_vert.append(vert)
 
-        return maxFlow, reachable
+        return maxFlow, obj_vert
 
 
 def read_capacity(path):
