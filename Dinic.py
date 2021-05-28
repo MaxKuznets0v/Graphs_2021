@@ -30,11 +30,14 @@ class Graph:
         self.distances = list()
         self.first_edge = list()
 
+        print("in init")
+
     def bfs(self):
         """
         Поиск в ширину с выделением слоев (distances - расстояния от источника)
         :return: bool - возвращается истина, если сток достижим из источника
         """
+        print("in bfs")
         import queue
         q = queue.Queue()
         self.distances = [float('Inf') for i in range(len(self.net))]
@@ -42,7 +45,9 @@ class Graph:
         q.put(self.source)
         while not q.empty():
             cur = q.get()
+            print("BFS vertex:", cur)
             for v in list(self.flow[cur].keys()):
+                print('bfs', v)
                 try:
                     capacity = self.net[cur][v]['weight']
                 except KeyError:
@@ -60,11 +65,14 @@ class Graph:
         :param flow: минимальная пропускная способность сети в отсавшемся пути
         :return: величина потока по локирующему пути
         """
+        print("in dfs")
         if v == self.sink or not flow:
             return flow
+        neighbours = list(self.flow[v].keys())
         for i in range(self.first_edge[v], len(self.flow[v])):
+            print('dfs', i)
             # если вершина находится в следующем слое
-            ind = list(self.flow[v].keys())[i]
+            ind = neighbours[i]
             if self.distances[ind] == self.distances[v] + 1:
                 try:
                     capacity = self.net[v][ind]['weight']
@@ -95,18 +103,19 @@ class Graph:
             while flow != 0:
                 maxFlow += flow
                 flow = self.dfs(self.source, float('Inf'))
+                print(self.first_edge[self.source])
         else:
             # нахождение разреза
             if not cut:
                 return maxFlow, None
-            cut = list()
-            visited = [i for i in range(len(self.distances)) if self.distances[i] != float('Inf')]
-            for vert in visited:
+            obj_vert = list()
+            reachable = [i for i in range(len(self.distances)) if self.distances[i] != float('Inf')]
+            for vert in reachable:
                 for v in list(self.net[vert].keys()):
-                    if self.net[vert][v]['weight'] > 0 and self.distances[v] == float('Inf'):
-                        cut.append((vert, v))
+                    if v == self.sink and self.net[vert][v]['weight'] > 0 and self.distances[v] == float('Inf'):
+                        obj_vert.append(vert)
 
-        return maxFlow, cut
+        return maxFlow, obj_vert
 
 
 def read_capacity(path):
@@ -115,6 +124,7 @@ def read_capacity(path):
     :param path: путь до файла
     :return: двумерный массив - матрица пропускных способностей
     """
+    print("in read capacity")
     with open(path, 'r') as file:
         graph_info = file.read()
     graph_info = graph_info.split('\n')
