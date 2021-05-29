@@ -110,12 +110,12 @@ class Graph:
                 return maxFlow, None
             obj_vert = list()
             reachable = [i for i in range(len(self.distances)) if self.distances[i] != float('Inf')]
-            for vert in reachable:
-                for v in list(self.net[vert].keys()):
-                    if v == self.sink and self.net[vert][v]['weight'] > 0 and self.distances[v] == float('Inf'):
-                        obj_vert.append(vert)
+            # for vert in reachable:
+            #     for v in list(self.net[vert].keys()):
+            #         if v == self.sink and self.net[vert][v]['weight'] > 0 and self.distances[v] == float('Inf'):
+            #             obj_vert.append(vert)
 
-        return maxFlow, obj_vert
+        return maxFlow, reachable
 
     def update(self, edges):
         """
