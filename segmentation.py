@@ -7,8 +7,10 @@ Image.LOAD_TRUNCATED_IMAGES = True
 
 
 # параметры
-sigma = 60
-lambda_ = 1
+sigma = 100
+lambda_ = 2
+
+step_histo = 16
 
 # ширина, высота и количество пикселей в изображениия
 width = 0
@@ -42,8 +44,6 @@ def fill_neighbours_list(neighbours_list):
         else:
             neighbours_list.append([i - width, i - 1, i + 1, i + width])
 
-step_histo = 16
-
 
 def R_obj(p, counts_obj, counts_bkg):
     p_row = p // width - 1 if p % width == 0 else p // width # p_y
@@ -73,7 +73,6 @@ def R_bkg(p, counts_obj, counts_bkg):
     return -math.log(Pr_bkg)
 
 
-# !!! еще подредачить для 8 соседей
 def dist(p, q):
     return 1
 
@@ -169,10 +168,6 @@ def add_seeds(image_name, obj_pixels, bkg_pixels):
 def segmentation(image_name, obj_pixels, bkg_pixels):
     global image
     global width, height, size
-    # try:
-    #     im = Image.open('images-320/' + image_name)
-    # except FileNotFoundError:
-    #     print("Файл не найден")
     im = Image.open('images-320/' + image_name)
     width = im.size[0]
     height = im.size[1]
@@ -212,8 +207,6 @@ def segmentation(image_name, obj_pixels, bkg_pixels):
     global graph
     graph = Graph(adj_matrix, 0, adj_matrix_size-1)
     _, obj = graph.dinic(cut=True)
-    #_, partition = nx.algorithms.flow.minimum_cut(adj_matrix, 0, adj_matrix_size-1)
-    #obj, non_reachable = partition
 
     # пиксели из множества достижимых вершин обозначим 255 (белый), остальные - 0 (черный) и получим ч/б изображение
     img_result = [([0] * width) for i in range(height)]
