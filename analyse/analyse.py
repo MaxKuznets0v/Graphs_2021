@@ -1,19 +1,18 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-data = pd.read_csv("results_table.csv")
+data = pd.read_csv(r"person1.csv")
 sigma = data['Сигма'].values
 lambda_ = data['Лямбда'].values
+acc = data['Метрика 1'].values
+jacc = data['Мера Жаккара'].values
 
-accuracy = data['Метрика 1'].values
-jaccard = data['Мера Жаккара'].values
-acc = []
-jacc = []
-for i in range(len(accuracy)):
-    acc.append(float(accuracy[i].replace(',', '.')))
-    jacc.append(float(jaccard[i].replace(',', '.')))
+# for i in range(len(accuracy)):
+#     acc.append(float(accuracy[i].replace(',', '.')))
+#     jacc.append(float(jaccard[i].replace(',', '.')))
 
 def plot1():
+    print(len(sigma), len(acc))
     plt.scatter(sigma, acc)
     plt.xlabel('sigma')
     plt.ylabel('accuracy')
@@ -37,7 +36,8 @@ def plot4():
     plt.ylabel('jaccard')
     plt.savefig('graphics/lambda_jacc')
 
+
 plot1()
-# plot2()
-# plot3()
-# plot4()
+#plot2()
+#plot3()
+#plot4()
